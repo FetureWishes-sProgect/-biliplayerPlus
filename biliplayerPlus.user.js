@@ -1155,11 +1155,8 @@
 		 * @param {number} min 最小值
 		 * @param {number} max 最大值
 		 * @param {number} step 步长
-		 * @property {number} stepNumb 表示选中的是第几个点
-		 * @property {number} trueNumb 显示的数字
+		 * @property {number} value 显示的数字
 		 * @property {Function} onChange 滚动条滑动时的回调函数
-		 * @property {Function} onChangeEnd 更改结束时的回调函数
-		 * @property {Function} initValue 设置初始值
 		 * @returns {HTMLDivElement} 数字输入框组件
 		 */
 		createNumberBox(value,min,max,step){//创建数字输入框
