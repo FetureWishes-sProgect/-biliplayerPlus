@@ -581,7 +581,8 @@
 				.checkBoxTag{
 					position:relative;
 					cursor:pointer;
-					padding-left:2em;
+					display:inline-block;
+					margin-left:2em;
 				}
 				.checkBoxTag:hover{
 					color:#00a1d6!important;
@@ -613,7 +614,10 @@
 				let {type,key,name,value,title}=element;
 				if (type!=="hiddenSwitch") continue;
 
-				let checkBoxTag=document.createElement("div");
+				//一行
+				let checkBoxLine=document.createElement("div");
+				//一个选项框
+				let checkBoxTag=document.createElement("span");
 				checkBoxTag.classList.add("checkBoxTag");
 				
 				this.gridListSettingMapper[key]=checkBoxTag;
@@ -625,7 +629,7 @@
 				let checkBoxIcon=document.createElement("span");
 				checkBoxIcon.classList.add("checkBoxIcon");
 				checkBoxTag.appendChild(checkBoxIcon);
-				let checkboxdiscrible=document.createElement("p");
+				let checkboxdiscrible=document.createElement("span");
 				checkboxdiscrible.classList.add("checkboxdiscrible");
 				checkboxdiscrible.textContent=name;
 				checkBoxTag.appendChild(checkboxdiscrible);
@@ -651,7 +655,8 @@
 					if(value!=checkBoxTag.ischecked)
 						checkBoxTag.click();
 				}
-				shadowRoot.append(checkBoxTag);
+				checkBoxLine.appendChild(checkBoxTag);
+				shadowRoot.append(checkBoxLine);
 			}
 			container.list=list;
 			return container;
