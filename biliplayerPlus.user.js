@@ -880,7 +880,25 @@
 			//执行一次
 			setTransition(this.config.rangeTransition.value);
 
-			minusBtn.addEventListener("click",()=>{
+			//触发changeEnd方法
+			let changeEndTrigger=()=>{
+				if(container.onChangeEnd){
+					container.onChangeEnd(container.trueNumb);
+				}
+			}
+
+
+			//清楚定时器
+			let timmerClear=(e)=>{
+				if(e.button==0){
+					clearTimeout(processContent.timmer);
+					clearInterval(processContent.timmer);
+					changeEndTrigger();
+				}
+			};
+
+			//-1
+			let minusValue=()=>{
 				if(container.stepNumb<=0)return;
 				//每个点的长度
 				let stepNumb=--container.stepNumb;
@@ -889,11 +907,9 @@
 										.multipliedBy(step)
 										.plus(start)
 										.valueOf();
-				if(container.onChangeEnd){
-					container.onChangeEnd(container.trueNumb);
-				}
-			});
-			plusBtn.addEventListener("click",()=>{
+			}
+			//+1
+			let plusValue=()=>{
 				if(container.trueNumb>=end)return;
 				//每个点的长度
 				let stepNumb=++container.stepNumb;
@@ -902,10 +918,38 @@
 										.multipliedBy(step)
 										.plus(start)
 										.valueOf();
-				if(container.onChangeEnd){
-					container.onChangeEnd(container.trueNumb);
-				}
+			}
+
+
+			minusBtn.addEventListener("mousedown",()=>{
+				minusValue();
+				//长按时间达到后继续
+				processContent.timmer=setTimeout(() => {
+					minusValue();
+					//确认长按，快速触发
+					processContent.timmer=setInterval(()=>{
+						minusValue();
+					},100);
+				}, 500);
 			});
+			minusBtn.addEventListener("mouseup",timmerClear);
+			minusBtn.addEventListener("mouseleave",timmerClear);
+
+			plusBtn.addEventListener("mousedown",()=>{
+				plusValue();
+				//长按时间达到后继续
+				processContent.timmer=setTimeout(() => {
+					plusValue();
+					//确认长按，快速触发
+					processContent.timmer=setInterval(()=>{
+						plusValue();
+					},100);
+				}, 500);
+			});
+			plusBtn.addEventListener("mouseup",timmerClear);
+			plusBtn.addEventListener("mouseleave",timmerClear);
+
+			
 			processDot.addEventListener("mousedown",(e)=>{
 				let mouseDownX=e.pageX;
 				let left=processDot.offsetLeft;
@@ -939,9 +983,7 @@
 				document.addEventListener("mousemove",documentMouseMoveFunction);
 				let docuemntMouseUpFunction=()=>{
 					//监听移动结束事件
-					if(container.onChangeEnd){
-						container.onChangeEnd(container.trueNumb);
-					}
+					changeEndTrigger();
 					document.removeEventListener("mousemove",documentMouseMoveFunction);
 					document.removeEventListener("mouseup",docuemntMouseUpFunction);
 				};
@@ -1333,7 +1375,7 @@
 							container.value=calcValue>max?max:calcValue;
 							changehandler();
 						},100);
-					}, 500);;
+					}, 500);
 				}
 			});
 			addIcon.addEventListener("mouseup",timmerClear);
