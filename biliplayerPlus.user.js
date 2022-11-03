@@ -588,7 +588,7 @@
 					color:#00a1d6!important;
 				}
 				.checkBoxIcon{
-					position:absolute;
+					vertical-align:middle;
 				}
 				.checkBoxIcon:after{
 					font-family: 'Material Icons';
@@ -601,8 +601,8 @@
 				}
 				.checkboxdiscrible{
 					margin:0;
-					width:calc(100% - 24px);
-					padding-left:24px;
+					margin-left:5px;
+					vertical-align:middle;
 					line-height:24px;
 					overflow-wrap:anywhere;
 					white-space:break-spaces;
