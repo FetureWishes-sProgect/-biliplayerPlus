@@ -662,7 +662,7 @@
 			return container;
 		},
 		/**
-		 * @param {object} content 显示内容
+		 * @param {object} content 显示内容（可以是图标）
 		 * @param {string} title 内容提示文本
 		 * @returns {HTMLDivElement} 按钮组件
 		 */
@@ -1141,7 +1141,7 @@
 			shadowRoot.append(selectItemBoxPlaceHolder);
 			return selectBoxContent;
 		},
-		//节流函数
+		//滚动节流函数
 		scrollThrottle(fn,wait){
 			var pre = Date.now();
 			return function(){
@@ -1297,6 +1297,7 @@
 			//触发changeEnd函数
 			let timmerClear=(e)=>{
 				if(e.button==0){
+					clearTimeout(changeTools.timmer);
 					clearInterval(changeTools.timmer);
 					if(container.onChangeEnd){
 						container.onChangeEnd(container.value);
@@ -1317,13 +1318,22 @@
 									.valueOf();
 					container.value=calcValue>max?max:calcValue;
 					changehandler();
-					changeTools.timmer=setInterval(()=>{
+					//长按时间达到后继续
+					changeTools.timmer=setTimeout(() => {
 						let calcValue=new BigNumber(container.value)
 										.plus(step)
 										.valueOf();
 						container.value=calcValue>max?max:calcValue;
 						changehandler();
-					},100);
+						//确认长按，快速触发
+						changeTools.timmer=setInterval(()=>{
+							let calcValue=new BigNumber(container.value)
+											.plus(step)
+											.valueOf();
+							container.value=calcValue>max?max:calcValue;
+							changehandler();
+						},100);
+					}, 500);;
 				}
 			});
 			addIcon.addEventListener("mouseup",timmerClear);
@@ -1336,13 +1346,22 @@
 									.valueOf();
 					container.value=calcValue<min?min:calcValue;
 					changehandler();
-					changeTools.timmer=setInterval(()=>{
+					//长按时间达到后继续
+					changeTools.timmer=setTimeout(() => {
 						let calcValue=new BigNumber(container.value)
 										.minus(step)
 										.valueOf();
 						container.value=calcValue<min?min:calcValue;
 						changehandler();
-					},100);
+						//确认长按，快速触发
+						changeTools.timmer=setInterval(()=>{
+							let calcValue=new BigNumber(container.value)
+											.minus(step)
+											.valueOf();
+							container.value=calcValue<min?min:calcValue;
+							changehandler();
+						},100);
+					}, 500);
 				}
 			});
 			minusIcon.addEventListener("mouseup",timmerClear);
