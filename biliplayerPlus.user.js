@@ -1526,8 +1526,9 @@
 		registerToolTip(){
 			class ToolTip extends HTMLElement {
 				#slot;
-				#offset=5;
+				#offset=2;
 				#timmer;
+				#direction;
 				constructor() {
 					super();
 					let shadowRoot = this.attachShadow({ mode: "open" });
@@ -1554,6 +1555,24 @@
 							border-style: solid;
 							border-color: #555 transparent transparent transparent;
 						}
+						.tooltip.right::after{
+							border-color: transparent #555 transparent transparent;
+							transform: translate(-100%,-50%);
+							top: 50%;
+							left: 0;
+						}
+						.tooltip.bottom::after{
+							border-color: transparent transparent #555 transparent;
+							transform: translate(-50%,-100%);
+							top: 0;
+							left: 50%;
+						}
+						.tooltip.left::after{
+							border-color: transparent transparent transparent #555;
+							transform: translateY(-50%);
+							top: 50%;
+							left: 100%;
+						}
 						.tooltip.show{
 							visibility:visible;
 							opacity: 100%;
@@ -1568,9 +1587,6 @@
 					showContent.append("11111");
 					tooltip.append(showContent);
 					shadowRoot.append(tooltip);
-
-					//获取设置
-					let position=this.getAttribute("position");
 					
 					let content=document.createElement("slot");
 					this.#slot=content;
@@ -1580,7 +1596,31 @@
 				}
 				connectedCallback(){
 					if(this.isConnected){
+						let direction=this.getAttribute("direction");
+						switch(direction){
+							case "right":{
+								this.tooltip.classList.add("right");
+								this.#direction="right";
+								break;
+							}
+							case "bottom":{
+								this.tooltip.classList.add("bottom");
+								this.#direction="bottom";
+								break;
+							}
+							case "left":{
+								this.tooltip.classList.add("left");
+								this.#direction="left";
+								break;
+							}
+							default:{
+								this.#direction="top";
+								break;
+							}
+						}
+
 						this.updatePosition();
+
 						let trigger=this.getAttribute("trigger");
 						switch(trigger){
 							case "click":{
@@ -1607,7 +1647,7 @@
 								}
 								break;
 							}
-						}
+						};
 					}
 				}
 				static get observedAttributes() {return ["show","content","offset"]; }
@@ -1637,11 +1677,51 @@
 					}
 				}
 				updatePosition(){
+					let direction=this.#direction;
 					let offset=this.#offset;
 					let reference=this.#slot.assignedElements()[0].getBoundingClientRect();
 					let root=this.getBoundingClientRect();
-					let left=reference.left - root.left + ( reference.width - this.tooltip.offsetWidth)/2;
-					let top=reference.top - root.top - offset - this.tooltip.offsetHeight;
+					let left=-root.left;
+					let top=-root.top;
+					switch(direction){
+						case "top":{
+							left+=reference.left;
+							top+=reference.top;
+							left+=( reference.width - this.tooltip.offsetWidth)/2;//左右居中
+							top-=offset;
+							top-=~~getComputedStyle(this.tooltip,"after").borderWidth.replace("px","");
+							top-=this.tooltip.offsetHeight;
+							break;
+						}
+						case "bottom":{
+							console.log(root,reference);
+							left+=reference.left;
+							top+=reference.bottom;
+							left+=( reference.width - this.tooltip.offsetWidth)/2;//左右居中
+							top+=offset;
+							top+=~~getComputedStyle(this.tooltip,"after").borderWidth.replace("px","");
+							break;
+						}
+						case "left":{
+							left+=reference.left;
+							top+=reference.top;
+							top+=( reference.height - this.tooltip.offsetHeight)/2;//上下居中
+							left-=offset;
+							left-=this.tooltip.offsetWidth;
+							left-=~~getComputedStyle(this.tooltip,"after").borderWidth.replace("px","");
+							break;
+						}
+						case "right":{
+							left+=reference.right;
+							top+=reference.top;
+							top+=( reference.height - this.tooltip.offsetHeight)/2;//上下居中
+							left+=offset;
+							left+=~~getComputedStyle(this.tooltip,"after").borderWidth.replace("px","");
+							break;
+						}
+						default:
+							break;
+					}
 					this.tooltip.style.left=left+"px";
 					this.tooltip.style.top=top+"px";
 				}
