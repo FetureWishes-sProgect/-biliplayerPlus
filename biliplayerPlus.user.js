@@ -1450,66 +1450,6 @@
 		},
 		/**
 		 *
-		 * @param {object} content 显示内容（可以是图标或组件）
-		 * @param {string} position 内容提示文本
-		 * @returns {HTMLDivElement} 弹出框组件
-		 */
-		createToolTip(content,position){//创建弹出框组件
-			let container=document.createElement("div");
-			let shadowRoot=container;
-			if (this.config.useShadowRoot.value) {
-				shadowRoot=container.attachShadow({mode:"open"});
-			}
-			container.style.transform="translate(50%)";
-			let style=document.createElement("style");
-			style.innerHTML=`
-				.tooltip{
-					position: relative;
-					transform: translateY(calc(-100% - 10px)) translateX(-50%);
-					width: fit-content;
-					height: fit-content;
-					background-color: #555;
-					color: #fff;
-					text-align: center;
-					padding: 5px;
-					opacity: 0;
-					transition: .5s;
-				}
-				.tooltip::after{
-					content: "";
-					position: absolute;
-					top: 100%;
-					left: 50%;
-					transform: translateX(-50%);
-					border-width: 5px;
-					border-style: solid;
-					border-color: #555 transparent transparent transparent;
-				}
-				.tooltip.show{
-					opacity: 100%;
-				}
-			`;
-			shadowRoot.appendChild(style);
-
-			let tooltip=document.createElement("div");
-			tooltip.classList.add("tooltip");
-
-			//控制显示
-			container.show=false;
-			this.watchValue(container, "show");
-			container["show_onChange"]=(changedValue)=>{
-				if(changedValue){
-					tooltip.classList.add("show");
-				}else{
-					tooltip.classList.remove("show");
-				}
-			};
-			tooltip.append(content);
-			shadowRoot.append(tooltip);
-			return container;
-		},
-		/**
-		 *
 		 * @param {object} content 弹出框提示文本（可以是图标或组件）
 		 * @param {number} offset 弹出框和元素之间的间隙，单位px
 		 * @param {string} direction 弹出框相对于需要提示的元素的位置
@@ -1544,6 +1484,7 @@
 							opacity: 0;
 							transition:opacity .5s;
 							user-select: none;
+							z-index:1;
 						}
 						.tooltip::after{
 							content: "";
@@ -1677,10 +1618,11 @@
 					}
 				}
 				updatePosition(){
+					if(!this.isConnected)return;
 					let direction=this.#direction;
 					let offset=this.#offset;
 					let reference=this.#slot.assignedElements()[0].getBoundingClientRect();
-					let root=this.getBoundingClientRect();
+					let root=this.tooltip.offsetParent.getBoundingClientRect();
 					let left=-root.left;
 					let top=-root.top;
 					switch(direction){
@@ -1818,8 +1760,6 @@
 				grid.dependency=[];
 
 				grid.style="margin:10px 20px;";
-				//添加说明
-				if(title) grid.title=title;
 				//根据类型创建设置项
 				if(type=="bool"){
 					let {name,value} = this.config[key];
@@ -2027,7 +1967,16 @@
 					}
 					grid.append(checkboxBox);
 				}
-				gridBox.appendChild(grid);
+
+				//添加说明
+				if(title){
+					let tooltip=document.createElement("tool-tip");
+					tooltip.append(grid);
+					tooltip.setAttribute("content",title);
+					gridBox.appendChild(tooltip);
+				}else{
+					gridBox.appendChild(grid);
+				}
 				
 			}
 			confirm.append(gridBox);
