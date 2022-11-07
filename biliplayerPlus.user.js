@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili 播放器增强
 // @namespace    https://github.com/Grow-Willing/biliplayerPlus
-// @version      2022.10.8
+// @version      2022.11.5
 // @description  快捷键设置,回车快速发弹幕,双击全屏,自动选择最高清画质、播放、全屏、关闭弹幕、自动转跳和自动关灯等
 // @author       sugar
 // @license      MIT
@@ -235,6 +235,7 @@
 			this.touchHandler(this.getShowElement());
 		},
 		init(){//按照时钟周期性初始化，只有当需要的元素出来时才会初始化
+			this.registerToolTip();
 			let settingControlInit=()=>{
 				if(this.maxInitTimes){
 					setTimeout(() => {
@@ -472,6 +473,9 @@
 		 * @param {String} key 监听的值
 		 */
 		watchValue(value,key){//监听指定key的值的变化
+			//保存先前的值
+			value["_"+key]=value[key];
+			//绑定监听
 			Object.defineProperty(value, key, { set: function (x) {
 				this.preValue=this[key];
 				this["_"+key] = x;
@@ -866,6 +870,10 @@
 			//进度条圆点
 			let processDot=document.createElement("div");
 			processDot.classList.add("processDot");
+			let tooltip=document.createElement("tool-tip");
+			tooltip.setAttribute("trigger", "manual");
+			tooltip.setAttribute("hiddenDelay", 500);
+			tooltip.append(processDot);
 			//切换启用过渡特效
 			let setTransition=(useTransition)=>{
 				if(useTransition){
@@ -949,8 +957,17 @@
 			plusBtn.addEventListener("mouseup",timmerClear);
 			plusBtn.addEventListener("mouseleave",timmerClear);
 
-			
+			let processDotControling=false;
+			processDot.addEventListener("mouseenter",(e)=>{
+				tooltip.show();
+			});
+			processDot.addEventListener("mouseleave",(e)=>{
+				if(!processDotControling){
+					tooltip.hidden();
+				}
+			});
 			processDot.addEventListener("mousedown",(e)=>{
+				processDotControling=true;
 				let mouseDownX=e.pageX;
 				let left=processDot.offsetLeft;
 				let width=processBar.offsetWidth;
@@ -982,6 +999,8 @@
 				};
 				document.addEventListener("mousemove",documentMouseMoveFunction);
 				let docuemntMouseUpFunction=()=>{
+					processDotControling=false;
+					tooltip.hidden();
 					//监听移动结束事件
 					changeEndTrigger();
 					document.removeEventListener("mousemove",documentMouseMoveFunction);
@@ -991,7 +1010,7 @@
 			});
 			processBar.append(activeProcessBar);
 			processBarContent.append(processBar);
-			processBarContent.append(processDot);
+			processBarContent.append(tooltip);
 			processContent.append(minusBtn);
 			processContent.append(processBarContent);
 			processContent.append(plusBtn);
@@ -1020,7 +1039,13 @@
 			//监听trueNumb的更改
 			this.watchValue(container,"trueNumb");
 			//将onChange事件绑定
-			Object.defineProperty(container,"trueNumb_onChange", { get: function (x) { return this.onChange } });
+			container["trueNumb_onChange"]=(trueNumb,preValue)=>{
+				tooltip.setAttribute("content", container.trueNumb);
+				tooltip.updatePosition();
+				if(container.onChange){
+					container.onChange(trueNumb,preValue);
+				}
+			};
 			//暴露初始化函数
 			container.initValue=(trueNumb)=>{
 				//计算是第几个点
@@ -1423,6 +1448,228 @@
 			container.value=value;
 			return container;
 		},
+		/**
+		 *
+		 * @param {object} content 显示内容（可以是图标或组件）
+		 * @param {string} position 内容提示文本
+		 * @returns {HTMLDivElement} 弹出框组件
+		 */
+		createToolTip(content,position){//创建弹出框组件
+			let container=document.createElement("div");
+			let shadowRoot=container;
+			if (this.config.useShadowRoot.value) {
+				shadowRoot=container.attachShadow({mode:"open"});
+			}
+			container.style.transform="translate(50%)";
+			let style=document.createElement("style");
+			style.innerHTML=`
+				.tooltip{
+					position: relative;
+					transform: translateY(calc(-100% - 10px)) translateX(-50%);
+					width: fit-content;
+					height: fit-content;
+					background-color: #555;
+					color: #fff;
+					text-align: center;
+					padding: 5px;
+					opacity: 0;
+					transition: .5s;
+				}
+				.tooltip::after{
+					content: "";
+					position: absolute;
+					top: 100%;
+					left: 50%;
+					transform: translateX(-50%);
+					border-width: 5px;
+					border-style: solid;
+					border-color: #555 transparent transparent transparent;
+				}
+				.tooltip.show{
+					opacity: 100%;
+				}
+			`;
+			shadowRoot.appendChild(style);
+
+			let tooltip=document.createElement("div");
+			tooltip.classList.add("tooltip");
+
+			//控制显示
+			container.show=false;
+			this.watchValue(container, "show");
+			container["show_onChange"]=(changedValue)=>{
+				if(changedValue){
+					tooltip.classList.add("show");
+				}else{
+					tooltip.classList.remove("show");
+				}
+			};
+			tooltip.append(content);
+			shadowRoot.append(tooltip);
+			return container;
+		},
+		/**
+		 *
+		 * @param {object} content 弹出框提示文本（可以是图标或组件）
+		 * @param {number} offset 弹出框和元素之间的间隙，单位px
+		 * @param {string} direction 弹出框相对于需要提示的元素的位置
+		 * @param {string} additionalDirection 箭头指示的位置偏移
+		 * @param {string} trigger 触发行为，可选 hover/click/manual，默认值hover,若为manual则手动控制显示和影藏
+		 * @param {string} triggerTarget 触发显示/隐藏的对象，设置为tooltip则鼠标移动到显示框不关闭，tooltip或target，默认target
+		 * @param {number} showDelay 显示延迟，单位ms
+		 * @param {number} hiddenDelay 影藏延迟，单位ms
+		 * @property {function} updatePosition 更新tooltip的位置，用以在运动元素中实时调整
+		 * @property {function} show 手动显示
+		 * @property {function} hidden 手动影藏
+		 * @returns {HTMLDivElement} 弹出框组件
+		 */
+		registerToolTip(){
+			class ToolTip extends HTMLElement {
+				#slot;
+				#offset=5;
+				#timmer;
+				constructor() {
+					super();
+					let shadowRoot = this.attachShadow({ mode: "open" });
+					let style=document.createElement("style");
+					style.innerHTML=`
+						.tooltip{
+							visibility:hidden;
+							position: absolute;
+							background-color: #555;
+							color: #fff;
+							text-align: center;
+							padding: 5px;
+							opacity: 0;
+							transition:opacity .5s;
+							user-select: none;
+						}
+						.tooltip::after{
+							content: "";
+							position: absolute;
+							top: 100%;
+							left: 50%;
+							transform: translateX(-50%);
+							border-width: 5px;
+							border-style: solid;
+							border-color: #555 transparent transparent transparent;
+						}
+						.tooltip.show{
+							visibility:visible;
+							opacity: 100%;
+						}
+					`;
+					shadowRoot.appendChild(style);
+
+					let tooltip=document.createElement("div");
+					tooltip.classList.add("tooltip");
+					this.tooltip=tooltip;
+					let showContent=document.createElement("div");
+					showContent.append("11111");
+					tooltip.append(showContent);
+					shadowRoot.append(tooltip);
+
+					//获取设置
+					let position=this.getAttribute("position");
+					
+					let content=document.createElement("slot");
+					this.#slot=content;
+
+					
+					shadowRoot.append(content);
+				}
+				connectedCallback(){
+					if(this.isConnected){
+						this.updatePosition();
+						let trigger=this.getAttribute("trigger");
+						switch(trigger){
+							case "click":{
+								this.onclick=()=>{
+									if(this.tooltip.classList.contains("show")){
+										this.hidden();
+									}else{
+										this.show();
+									}
+								}
+								break;
+							}
+							case "manual":
+								break;
+							default:{
+								let triggerTarget=this.getAttribute("triggerTarget");
+								triggerTarget=triggerTarget=="target"?content:this;
+			
+								triggerTarget.onmouseenter=()=>{
+									this.show();
+								};
+								triggerTarget.onmouseleave=()=>{
+									this.hidden();
+								}
+								break;
+							}
+						}
+					}
+				}
+				static get observedAttributes() {return ["show","content","offset"]; }
+				attributeChangedCallback(name, oldValue, newValue){
+					switch(name){
+						case "content":{
+							this.tooltip.removeChild(this.tooltip.firstChild);
+							this.tooltip.append(newValue);
+							break;
+						}
+						case "show":{
+							if(newValue=="true"){
+								this.show();
+							}else{
+								this.hidden();
+							}
+							break;
+						}
+						case "offset":{
+							if(Number(newValue)){
+								this.#offset=Number(newValue);
+							}
+							break;
+						}
+						default:
+							break;
+					}
+				}
+				updatePosition(){
+					let offset=this.#offset;
+					let reference=this.#slot.assignedElements()[0].getBoundingClientRect();
+					let root=this.getBoundingClientRect();
+					let left=reference.left - root.left + ( reference.width - this.tooltip.offsetWidth)/2;
+					let top=reference.top - root.top - offset - this.tooltip.offsetHeight;
+					this.tooltip.style.left=left+"px";
+					this.tooltip.style.top=top+"px";
+				}
+				show(){
+					let showDelay=this.getAttribute("showDelay");
+					clearTimeout(this.#timmer);
+					if(showDelay){
+						this.#timmer=setTimeout(() => {
+							this.tooltip.classList.add("show");
+						}, showDelay);
+					}else{
+						this.tooltip.classList.add("show");
+					}
+				}
+				hidden(){
+					let hiddenDelay=this.getAttribute("hiddenDelay");
+					clearTimeout(this.#timmer);
+					if(hiddenDelay){
+						this.#timmer=setTimeout(() => {
+							this.tooltip.classList.remove("show");
+						}, hiddenDelay);
+					}else{
+						this.tooltip.classList.remove("show");
+					}
+				}
+			}
+			customElements.define("tool-tip", ToolTip);
+		},
 		createSettingPanel() {//创建设置面板
 			//唯一化处理
 			if(this.settingPanel){
@@ -1725,7 +1972,7 @@
 		 */
 		keyHandler(key){
 			switch (key) {
-				case "openSettingShortcut":
+				case "openSettingShortcut": 
 					this.switchSettingPanel();
 					break;
 				default:
