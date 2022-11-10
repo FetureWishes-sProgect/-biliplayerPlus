@@ -64,7 +64,7 @@
 		getVideoTag(){
 			let video=document.querySelector(this.elementMapper["videoTag"]);
 			if(video){
-				
+
 			}else{
 				video=document.querySelector(this.elementMapper["videoTag_replace"]);
 			}
@@ -144,7 +144,7 @@
 		fullScreenSwitch(){//切换全屏
 			this.getFullScreenIcon().click();
 		},
-		
+
 		/**
 		 * 执行按键功能
 		 * @param {string} key 键值
@@ -207,7 +207,7 @@
 				if(/登录/.test(text)){//需要登录,登录后不显示
 					continue;
 				}else if(/大会员/.test(text)){//需要登录+大会员
-					
+
 				}else{
 					if(this.config.autoQuality.value){
 						element.click();
@@ -215,7 +215,7 @@
 					console.log(text);
 					break;
 				}
-				
+
 			}
 		},
 		speedControlBarInit(){//原生速度切换面板初始化
@@ -245,14 +245,14 @@
 							switch (list[value].key) {
 								case "wide":
 									if (this.iswideScreen()) {
-										
+
 									}else{
 										this.wideSwitch();
 									}
 									break;
 								case "webFullScreen":
 									if (this.isfullScreen()) {
-										
+
 									}else{
 										this.webFullScreenSwitch();
 									}
@@ -468,7 +468,7 @@
 			return settingRootElement;
 		},
 		/**
-		 * 
+		 *
 		 * @param {*} value 监听的元素
 		 * @param {String} key 监听的值
 		 */
@@ -623,7 +623,7 @@
 				//一个选项框
 				let checkBoxTag=document.createElement("span");
 				checkBoxTag.classList.add("checkBoxTag");
-				
+
 				this.gridListSettingMapper[key]=checkBoxTag;
 				checkBoxTag.dependency=[];
 
@@ -712,7 +712,7 @@
 					height:100%;
 					border-top-width:2px;
 					border-right-width:2px;
-					transition: 
+					transition:
 						width 0.3s ease-out,
 						height 0.3s ease-out 0.3s,
 						top 0.3s ease-out 0.3s,
@@ -857,7 +857,7 @@
 			let plusBtn=document.createElement("span");
 			plusBtn.classList.add("processControlBtn");
 			plusBtn.classList.add("processControlBtn_plus");
-			
+
 			//进度条+点容器
 			let processBarContent=document.createElement("div");
 			processBarContent.classList.add("processBarContent");
@@ -1239,7 +1239,7 @@
 				shadowRoot=container.attachShadow({ mode: 'open' });
 				let MaterialIconsStyle=document.createElement("style");
 				MaterialIconsStyle.innerText=GM_getResourceText("MaterialIcons");
-				
+
 				container.style=`
 						display: inline-block;
 						vertical-align: middle;
@@ -1351,7 +1351,7 @@
 				container.value=num;
 				changehandler();
 			})
-			
+
 			let changeTools=document.createElement("div");
 			changeTools.classList.add("changeTools");
 
@@ -1436,10 +1436,10 @@
 
 			changeTools.append(addIcon);
 			changeTools.append(minusIcon);
-			
+
 			numberBox.append(valueBox);
 			numberBox.append(changeTools);
-			
+
 			this.watchValue(container,"value");
 			container["value_onChange"]=(changedValue)=>{
 				valueBox.innerHTML=changedValue;
@@ -1451,9 +1451,12 @@
 		/**
 		 *
 		 * @param {object} content 弹出框提示文本（可以是图标或组件）
-		 * @param {number} offset 弹出框和元素之间的间隙，单位px
+		 * @param {number} offset 弹出框和元素之间的间隙，默认3，单位px
 		 * @param {string} direction 弹出框相对于需要提示的元素的位置
-		 * @param {string} additionalDirection 箭头指示的位置偏移
+		 * @param {string} arrowposition 箭头指示的位置，leftmost/left/halfleft/halfright/right/rightmost/center/topmost/top/halftop/halfbottom/bottom/bottommost
+		 * @param {number} arrowheight 箭头高度，默认5，单位px
+		 * @param {number} arrowwidth 箭头宽度，默认5，单位px
+		 * @param {string} algin 弹出框相对于提示元素地对齐方式，center/left/right/top/bottom，left/right只有在direction为top/bottom是有效，top/bottom同理
 		 * @param {string} trigger 触发行为，可选 hover/click/manual，默认值hover,若为manual则手动控制显示和影藏
 		 * @param {string} triggerTarget 触发显示/隐藏的对象，设置为tooltip则鼠标移动到显示框不关闭，tooltip或target，默认target
 		 * @param {number} showDelay 显示延迟，单位ms
@@ -1468,52 +1471,144 @@
 				#slot;
 				#offset=2;
 				#timmer;
+				#algin="center";
 				#direction;
+				#tooltip;
+				#showContent;
+				#arrow;
 				constructor() {
 					super();
 					let shadowRoot = this.attachShadow({ mode: "open" });
 					let style=document.createElement("style");
 					style.innerHTML=`
 						.tooltip{
+							--arrowheight:5;
+							--arrowwidth:5;
 							visibility:hidden;
 							position: absolute;
-							background-color: #555;
 							color: #fff;
-							text-align: center;
-							padding: 5px;
 							opacity: 0;
 							transition:opacity .5s;
-							user-select: none;
 							z-index:1;
 						}
-						.tooltip::after{
-							content: "";
+						.tooltip .showContent{
+							user-select: none;
+							padding: 5px;
+							background-color: #555;
+							text-align: center;
+						}
+						.tooltip .arrowContent{
 							position: absolute;
+						}
+						.tooltip .arrowContent .arrow{
+							border-width: calc(var(--arrowheight) * 1px) calc(var(--arrowwidth) * 0.5px);
+							border-style: solid;
+						}
+						.tooltip.top .arrowContent{
 							top: 100%;
 							left: 50%;
-							transform: translateX(-50%);
-							border-width: 5px;
-							border-style: solid;
-							border-color: #555 transparent transparent transparent;
 						}
-						.tooltip.right::after{
-							border-color: transparent #555 transparent transparent;
-							transform: translate(-100%,-50%);
+						.tooltip.top .arrowContent .arrow{
+							border-color: #555 transparent transparent transparent;
+							transform: translateX(-50%);
+						}
+						.tooltip.right .arrowContent{
 							top: 50%;
 							left: 0;
+							transform: translateX(-100%);
 						}
-						.tooltip.bottom::after{
-							border-color: transparent transparent #555 transparent;
-							transform: translate(-50%,-100%);
+						.tooltip.right .arrowContent .arrow{
+							border-color: transparent #555 transparent transparent;
+							transform: translateY(-50%);
+						}
+						.tooltip.bottom .arrowContent{
 							top: 0;
 							left: 50%;
+							transform: translateY(-100%);
 						}
-						.tooltip.left::after{
-							border-color: transparent transparent transparent #555;
-							transform: translateY(-50%);
+						.tooltip.bottom .arrowContent .arrow{
+							border-color: transparent transparent #555 transparent;
+							transform: translateX(-50%);
+						}
+						.tooltip.left .arrowContent{
 							top: 50%;
 							left: 100%;
 						}
+						.tooltip.left .arrowContent .arrow{
+							border-color: transparent transparent transparent #555;
+							transform: translateY(-50%);
+						}
+						.tooltip.top[data-arrowposition="leftmost"] .arrowContent,
+						.tooltip.bottom[data-arrowposition="leftmost"] .arrowContent{
+							left: 0;
+							overflow:hidden;
+						}
+						.tooltip.top[data-arrowposition="rightmost"] .arrowContent,
+						.tooltip.bottom[data-arrowposition="rightmost"] .arrowContent{
+							left: 100%;
+							overflow:hidden;
+						}
+						.tooltip.left[data-arrowposition="topmost"] .arrowContent,
+						.tooltip.right[data-arrowposition="topmost"] .arrowContent{
+							top: 0;
+							overflow:hidden;
+						}
+						.tooltip.left[data-arrowposition="bottommost"] .arrowContent,
+						.tooltip.right[data-arrowposition="bottommost"] .arrowContent{
+							top: 100%;
+							overflow:hidden;
+						}
+						
+						.tooltip.top[data-arrowposition="left"] .arrowContent,
+						.tooltip.bottom[data-arrowposition="left"] .arrowContent{
+							left: 0;
+						}
+						.tooltip.top[data-arrowposition="left"] .arrowContent .arrow,
+						.tooltip.bottom[data-arrowposition="left"] .arrowContent .arrow{
+							transform:none;
+						}
+						.tooltip.top[data-arrowposition="right"] .arrowContent,
+						.tooltip.bottom[data-arrowposition="right"] .arrowContent{
+							left: 100%;
+						}
+						.tooltip.top[data-arrowposition="right"] .arrowContent .arrow,
+						.tooltip.bottom[data-arrowposition="right"] .arrowContent .arrow{
+							transform:translateX(-100%);
+						}
+						.tooltip.left[data-arrowposition="top"] .arrowContent,
+						.tooltip.right[data-arrowposition="top"] .arrowContent{
+							top: 0;
+						}
+						.tooltip.left[data-arrowposition="top"] .arrowContent .arrow,
+						.tooltip.right[data-arrowposition="top"] .arrowContent .arrow{
+							transform:none;
+						}
+						.tooltip.left[data-arrowposition="bottom"] .arrowContent,
+						.tooltip.right[data-arrowposition="bottom"] .arrowContent{
+							top: 100%;
+						}
+						.tooltip.left[data-arrowposition="bottom"] .arrowContent .arrow,
+						.tooltip.right[data-arrowposition="bottom"] .arrowContent .arrow{
+							transform:translateY(-100%);
+						}
+						
+						.tooltip.top[data-arrowposition="halfleft"] .arrowContent,
+						.tooltip.bottom[data-arrowposition="halfleft"] .arrowContent{
+							left: 25%;
+						}
+						.tooltip.top[data-arrowposition="halfright"] .arrowContent,
+						.tooltip.bottom[data-arrowposition="halfright"] .arrowContent{
+							left: 75%;
+						}
+						.tooltip.left[data-arrowposition="halftop"] .arrowContent,
+						.tooltip.right[data-arrowposition="halftop"] .arrowContent{
+							top: 25;
+						}
+						.tooltip.left[data-arrowposition="halfbottom"] .arrowContent,
+						.tooltip.right[data-arrowposition="halfbottom"] .arrowContent{
+							top: 75%;
+						}
+
 						.tooltip.show{
 							visibility:visible;
 							opacity: 100%;
@@ -1523,42 +1618,64 @@
 
 					let tooltip=document.createElement("div");
 					tooltip.classList.add("tooltip");
-					this.tooltip=tooltip;
+					this.#tooltip=tooltip;
 					let showContent=document.createElement("div");
-					showContent.append("11111");
-					tooltip.append(showContent);
+					showContent.classList.add("showContent");
+					showContent.append("No Data");
+					this.#showContent=showContent;
+
+					let arrowContent=document.createElement("div");
+					arrowContent.classList.add("arrowContent");
+					let arrow=document.createElement("div");
+					arrow.classList.add("arrow");
+					this.#arrow=arrow;
+					arrowContent.appendChild(arrow);
+
+					tooltip.appendChild(showContent);
+					tooltip.appendChild(arrowContent);
 					shadowRoot.append(tooltip);
-					
+
 					let content=document.createElement("slot");
 					this.#slot=content;
 
-					
+
 					shadowRoot.append(content);
 				}
 				connectedCallback(){
 					if(this.isConnected){
 						let direction=this.getAttribute("direction");
+						let algin=this.getAttribute("algin");
 						switch(direction){
 							case "right":{
-								this.tooltip.classList.add("right");
+								this.#tooltip.classList.add("right");
 								this.#direction="right";
+								if(algin=="top"||algin=="bottom")
+									this.#algin=algin;
 								break;
 							}
 							case "bottom":{
-								this.tooltip.classList.add("bottom");
+								this.#tooltip.classList.add("bottom");
 								this.#direction="bottom";
+								if(algin=="left"||algin=="right")
+									this.#algin=algin;
 								break;
 							}
 							case "left":{
-								this.tooltip.classList.add("left");
+								this.#tooltip.classList.add("left");
 								this.#direction="left";
+								if(algin=="top"||algin=="bottom")
+									this.#algin=algin;
 								break;
 							}
 							default:{
+								this.#tooltip.classList.add("top");
 								this.#direction="top";
+								if(algin=="left"||algin=="right")
+									this.#algin=algin;
 								break;
 							}
 						}
+
 
 						this.updatePosition();
 
@@ -1566,7 +1683,7 @@
 						switch(trigger){
 							case "click":{
 								this.onclick=()=>{
-									if(this.tooltip.classList.contains("show")){
+									if(this.#tooltip.classList.contains("show")){
 										this.hidden();
 									}else{
 										this.show();
@@ -1579,7 +1696,7 @@
 							default:{
 								let triggerTarget=this.getAttribute("triggerTarget");
 								triggerTarget=triggerTarget=="target"?content:this;
-			
+
 								triggerTarget.onmouseenter=()=>{
 									this.show();
 								};
@@ -1591,12 +1708,12 @@
 						};
 					}
 				}
-				static get observedAttributes() {return ["show","content","offset"]; }
+				static get observedAttributes() {return ["show","content","offset","arrowposition","arrowheight","arrowwidth"]; }
 				attributeChangedCallback(name, oldValue, newValue){
 					switch(name){
 						case "content":{
-							this.tooltip.removeChild(this.tooltip.firstChild);
-							this.tooltip.append(newValue);
+							this.#showContent.innerHTML="";
+							this.#showContent.append(newValue);
 							break;
 						}
 						case "show":{
@@ -1613,6 +1730,20 @@
 							}
 							break;
 						}
+						case "arrowposition":{
+							delete this.#tooltip.dataset["arrowposition"];
+							this.#tooltip.dataset["arrowposition"]=newValue;
+						}
+						case "arrowheight":{
+							if(Number(newValue)){
+								this.#tooltip.style.setProperty("--arrowheight", newValue);
+							}
+						}
+						case "arrowwidth":{
+							if(Number(newValue)){
+								this.#tooltip.style.setProperty("--arrowwidth", newValue);
+							}
+						}
 						default:
 							break;
 					}
@@ -1622,60 +1753,83 @@
 					let direction=this.#direction;
 					let offset=this.#offset;
 					let reference=this.#slot.assignedElements()[0].getBoundingClientRect();
-					let root=this.tooltip.offsetParent.getBoundingClientRect();
+					let root=this.#tooltip.offsetParent.getBoundingClientRect();
 					let left=-root.left;
 					let top=-root.top;
 					switch(direction){
 						case "top":{
 							left+=reference.left;
 							top+=reference.top;
-							left+=( reference.width - this.tooltip.offsetWidth)/2;//左右居中
+							if(this.#algin=="left"){
+
+							}else if(this.#algin=="right"){
+								left+= reference.width - this.#tooltip.offsetWidth;//右对齐
+							}else{
+								left+=( reference.width - this.#tooltip.offsetWidth)/2;//左右居中
+							}
 							top-=offset;
-							top-=~~getComputedStyle(this.tooltip,"after").borderWidth.replace("px","");
-							top-=this.tooltip.offsetHeight;
+							top-=this.#arrow.getBoundingClientRect().height/2;
+							top-=this.#tooltip.offsetHeight;
 							break;
 						}
 						case "bottom":{
-							console.log(root,reference);
 							left+=reference.left;
 							top+=reference.bottom;
-							left+=( reference.width - this.tooltip.offsetWidth)/2;//左右居中
+							if(this.#algin=="left"){
+
+							}else if(this.#algin=="right"){
+								left+= reference.width - this.#tooltip.offsetWidth;//右对齐
+							}else{
+								left+=( reference.width - this.#tooltip.offsetWidth)/2;//左右居中
+							}
 							top+=offset;
-							top+=~~getComputedStyle(this.tooltip,"after").borderWidth.replace("px","");
+							top+=this.#arrow.getBoundingClientRect().height/2;
 							break;
 						}
 						case "left":{
 							left+=reference.left;
 							top+=reference.top;
-							top+=( reference.height - this.tooltip.offsetHeight)/2;//上下居中
+							if(this.#algin=="top"){
+
+							}else if(this.#algin=="bottom"){
+								top+= reference.height - this.#tooltip.offsetHeight;//下对齐
+							}else{
+								top+=( reference.height - this.#tooltip.offsetHeight)/2;//上下居中
+							}
 							left-=offset;
-							left-=this.tooltip.offsetWidth;
-							left-=~~getComputedStyle(this.tooltip,"after").borderWidth.replace("px","");
+							left-=this.#tooltip.offsetWidth;
+							left-=this.#arrow.getBoundingClientRect().width/2;
 							break;
 						}
 						case "right":{
 							left+=reference.right;
 							top+=reference.top;
-							top+=( reference.height - this.tooltip.offsetHeight)/2;//上下居中
+							if(this.#algin=="top"){
+
+							}else if(this.#algin=="bottom"){
+								top+= reference.height - this.#tooltip.offsetHeight;//下对齐
+							}else{
+								top+=( reference.height - this.#tooltip.offsetHeight)/2;//上下居中
+							}
 							left+=offset;
-							left+=~~getComputedStyle(this.tooltip,"after").borderWidth.replace("px","");
+							left+=this.#arrow.getBoundingClientRect().width/2;
 							break;
 						}
 						default:
 							break;
 					}
-					this.tooltip.style.left=left+"px";
-					this.tooltip.style.top=top+"px";
+					this.#tooltip.style.left=left+"px";
+					this.#tooltip.style.top=top+"px";
 				}
 				show(){
 					let showDelay=this.getAttribute("showDelay");
 					clearTimeout(this.#timmer);
 					if(showDelay){
 						this.#timmer=setTimeout(() => {
-							this.tooltip.classList.add("show");
+							this.#tooltip.classList.add("show");
 						}, showDelay);
 					}else{
-						this.tooltip.classList.add("show");
+						this.#tooltip.classList.add("show");
 					}
 				}
 				hidden(){
@@ -1683,10 +1837,10 @@
 					clearTimeout(this.#timmer);
 					if(hiddenDelay){
 						this.#timmer=setTimeout(() => {
-							this.tooltip.classList.remove("show");
+							this.#tooltip.classList.remove("show");
 						}, hiddenDelay);
 					}else{
-						this.tooltip.classList.remove("show");
+						this.#tooltip.classList.remove("show");
 					}
 				}
 			}
@@ -1750,7 +1904,7 @@
 			for (let i = 0; i < Object.keys(this.config).length; i++) {
 				let key=Object.keys(this.config)[i];
 				let {type,title} = this.config[key];
-				
+
 				if (/hidden/.test(type)){
 					continue;
 				}
@@ -1973,11 +2127,16 @@
 					let tooltip=document.createElement("tool-tip");
 					tooltip.append(grid);
 					tooltip.setAttribute("content",title);
+					tooltip.setAttribute("direction","top");
+					tooltip.setAttribute("algin","left");
+					tooltip.setAttribute("arrowposition","halfleft");
+					tooltip.setAttribute("arrowheight",10);
+					tooltip.setAttribute("offset",5);
 					gridBox.appendChild(tooltip);
 				}else{
 					gridBox.appendChild(grid);
 				}
-				
+
 			}
 			confirm.append(gridBox);
 			this.getSettingRootElement().append(confirm);
@@ -2001,7 +2160,7 @@
 		 */
 		keyHandler(key){
 			switch (key) {
-				case "openSettingShortcut": 
+				case "openSettingShortcut":
 					this.switchSettingPanel();
 					break;
 				default:
@@ -2219,7 +2378,7 @@
 
 		},
 		/**
-		 * 
+		 *
 		 * @param {boolean} isshow 是否为展示状态，不是展示状态则代表直接执行
 		 */
 		touchFunRunner(isshow){
@@ -2363,7 +2522,7 @@
 			GM_registerMenuCommand(this.settingName, this.switchSettingPanel.bind(this));
 			console.log("成功注册脚本设置项");
 			this.init();
-			
+
 			//路由改变重新初始化，同类型页面且无刷新页面时适用
 			this.listenHistoryChange(()=>{
 				this.init();
@@ -2378,6 +2537,6 @@
 		...data,
 		...method
 	}
-	
+
 	tampermonkeyTool.main();
 })()
