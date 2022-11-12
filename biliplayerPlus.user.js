@@ -235,7 +235,6 @@
 			this.touchHandler(this.getShowElement());
 		},
 		init(){//按照时钟周期性初始化，只有当需要的元素出来时才会初始化
-			this.registerToolTip();
 			let settingControlInit=()=>{
 				if(this.maxInitTimes){
 					setTimeout(() => {
@@ -870,7 +869,7 @@
 			//进度条圆点
 			let processDot=document.createElement("div");
 			processDot.classList.add("processDot");
-			let tooltip=document.createElement("tool-tip");
+			let tooltip=document.createElement("tampermonkey-tool-tip");
 			tooltip.setAttribute("trigger", "manual");
 			tooltip.setAttribute("hiddenDelay", 500);
 			tooltip.append(processDot);
@@ -1844,7 +1843,7 @@
 					}
 				}
 			}
-			customElements.define("tool-tip", ToolTip);
+			customElements.define("tampermonkey-tool-tip", ToolTip);
 		},
 		createSettingPanel() {//创建设置面板
 			//唯一化处理
@@ -2124,7 +2123,7 @@
 
 				//添加说明
 				if(title){
-					let tooltip=document.createElement("tool-tip");
+					let tooltip=document.createElement("tampermonkey-tool-tip");
 					tooltip.append(grid);
 					tooltip.setAttribute("content",title);
 					tooltip.setAttribute("direction","top");
@@ -2532,6 +2531,7 @@
 			console.log("请更改init函数以继续");
 		},
 		main(){
+			this.registerToolTip();
 			this.preInit();
 		},
 		...data,
