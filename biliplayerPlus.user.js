@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili 播放器增强
 // @namespace    https://github.com/Grow-Willing/biliplayerPlus
-// @version      2022.11.5
+// @version      2022.11.19
 // @description  快捷键设置,回车快速发弹幕,双击全屏,自动选择最高清画质、播放、全屏、关闭弹幕、自动转跳和自动关灯等
 // @author       sugar
 // @license      MIT
@@ -17,6 +17,7 @@
 // @require      https://cdn.bootcdn.net/ajax/libs/js-cookie/3.0.1/js.cookie.js
 // @resource     MaterialIcons https://fonts.googleapis.com/icon?family=Material+Icons
 // @grant        GM_addStyle
+// @grant        GM_info
 // @grant        GM_setValue
 // @grant        GM_deleteValue
 // @grant        GM_listValues
@@ -198,6 +199,16 @@
 			}
 		},
 
+
+		versionUpdateHandler(oldVersion, newVersion){
+			switch(oldVersion){//每个版本之间不break，使每个版本的结构都更新
+				case "2022.11.5":{
+					console.log("本版本无结构更新");
+				}
+				default:
+					break;
+			}
+		},
 		////////////////////////////////初始化函数
 		qualityControlBarInit(){//画质切换面板初始化
 			let qualityControlBarList=this.getQualityControlBar().querySelectorAll("li");
@@ -2253,12 +2264,15 @@
 		valueChangeHandler(key){
 			let {type} = this.config[key];
 			let gridTag=this.gridListSettingMapper[key];
-			gridTag.valueChangeHandler(key);
-			let dependency=gridTag.dependency;
-			if(dependency.length){
-				dependency.forEach((item)=>{
-					this.valueChangeHandler(item);
-				});
+			if(gridTag){//判断该元素是否被渲染
+				if(gridTag.valueChangeHandler)
+					gridTag.valueChangeHandler(key);
+				let dependency=gridTag.dependency;
+				if(dependency.length){
+					dependency.forEach((item)=>{
+						this.valueChangeHandler(item);
+					});
+				}
 			}
 		},
 		saveValue(key){//保存配置
@@ -2467,6 +2481,69 @@
 			}
 			console.log("已混入设置");
 		},
+		/**
+		 * 控制所有版本的更新逻辑，用于更改不同版本的配置结构
+		 * @param {string} oldVersion 旧版本号
+		 * @param {string} newVersion 新版本号
+		 */
+		versionUpdateHandler(oldVersion, newVersion){
+			console.log(`旧版本为${oldVersion}，新版本为${newVersion}，请编写更新函数以更新脚本配置`);
+		},
+		versionUpdater(){
+			console.log("检测版本更新");
+			if(this.config.version){
+				function compareVersion(version1, version2) {
+					const arr1 = version1.split('.');
+					const arr2 = version2.split('.');
+					const length1 = arr1.length;
+					const length2 = arr2.length;
+					const minlength = Math.min(length1, length2);
+					let i = 0;
+					for (i ; i < minlength; i++) {
+						let a = parseInt(arr1[i]);
+						let b = parseInt(arr2[i]);
+						if (a > b) {
+							return 1;
+						} else if (a < b) {
+							return -1;
+						}
+					}
+					if (length1 > length2) {
+						for(let j = i; j < length1; j++) {
+							if (parseInt(arr1[j]) != 0) {
+								return 1;
+							}
+						}
+						return 0
+					} else if (length1 < length2) {
+						for(let j = i; j < length2; j++) {
+							if (parseInt(arr2[j]) != 0) {
+								return -1;
+							}
+						}
+						return 0;
+					}
+					return 0;
+				}
+				if(compareVersion(GM_info.script.version,this.config.version.value)==1){
+					console.log("正在更新版本");
+					this.versionUpdateHandler(this.config.version.value,GM_info.script.version);
+					this.config.version.value=GM_info.script.version;
+					this.saveValue("version");
+					console.log("版本号保存完毕");
+				}else{
+					console.log("已是最新版本");
+				}
+			}else{
+				console.log("未保存版本号，正在保存");
+				this.config.version={
+					type:"hidden",
+					value:GM_info.script.version
+				}
+				this.saveValue("version");
+				console.log("版本号保存完毕");
+			}
+		},
 		resetSetting() {
 			let configlist=GM_listValues();
 			this.config=JSON.parse(JSON.stringify(this.default));
@@ -2507,6 +2584,7 @@
 			//根据网址得到标签选择器
 			this.getElementMapper();
 			this.mixin();
+			this.versionUpdater();
 			console.log("开始初始化键盘映射");
 			for (const key in this.config) {
 				let element = this.config[key];
