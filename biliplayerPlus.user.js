@@ -1857,6 +1857,25 @@
 			}
 			customElements.define("tampermonkey-tool-tip", ToolTip);
 		},
+		/**
+		 * 给gridListSettingMapper的元素添加依赖
+		 * @param {string} target 给谁添加依赖
+		 * @param {string} dependency 添加的依赖名
+		 */
+		mapperAddDependency(target, dependency){
+			//做空判断
+			if(this.gridListSettingMapper[target]){
+				if(this.gridListSettingMapper[target].dependency){
+
+				}else{
+					this.gridListSettingMapper[target].dependency=[];
+				}
+			}else{
+				this.gridListSettingMapper[target]={dependency:[]};
+			}
+			//最后统一添加依赖
+			this.gridListSettingMapper[target].dependency.push(dependency);
+		},
 		createSettingPanel() {//创建设置面板
 			//唯一化处理
 			if(this.settingPanel){
@@ -1921,8 +1940,21 @@
 				}
 
 				let grid=document.createElement("div");
-				this.gridListSettingMapper[key]=grid;
-				grid.dependency=[];
+				//信息载体
+				let gridInfoTarget;
+				if(this.gridListSettingMapper[key]){//判断先前是否有过
+					gridInfoTarget=this.gridListSettingMapper[key];
+					if(gridInfoTarget.dependency){
+
+					}else{
+						gridInfoTarget.dependency=[];
+					}
+				}else{
+					gridInfoTarget={};
+					this.gridListSettingMapper[key]=gridInfoTarget;
+					gridInfoTarget.dependency=[];
+				}
+				grid.gridInfoTarget=gridInfoTarget;
 
 				grid.style="margin:10px 20px;";
 				//根据类型创建设置项
@@ -1937,7 +1969,7 @@
 						console.log(this.config);
 						this.saveValue(key);
 					};
-					grid.valueChangeHandler=(key)=>{
+					gridInfoTarget.valueChangeHandler=(key)=>{
 						if(this.config[key].value!=switchTag.switchValue){
 							switchTag.switch();
 						}
@@ -1954,7 +1986,7 @@
 					discribe.innerText=name;
 					grid.append(discribe);
 					//告诉依赖key，此key使用了这个依赖
-					this.gridListSettingMapper.keyBindOne2One.dependency.push(key);
+					this.mapperAddDependency("keyBindOne2One",key);
 
 					//按键
 					let keyboard=document.createElement("kbd");
@@ -2021,7 +2053,7 @@
 						e.stopPropagation();
 						e.preventDefault();
 					});
-					grid.valueChangeHandler=(key)=>{
+					gridInfoTarget.valueChangeHandler=(key)=>{
 						let {value,code} = this.config[key];
 						keyboard.innerText=this.config.keyBindOne2One.value?code:value;
 					}
@@ -2048,7 +2080,7 @@
 					};
 
 					//告诉依赖key，此key使用了这个依赖
-					this.gridListSettingMapper.rangeTransition.dependency.push(key);
+					this.mapperAddDependency("rangeTransition",key);
 
 					console.log(name,start,end,step,value);
 					let processbar=this.createProcessBar(start,end,step);
@@ -2060,7 +2092,7 @@
 						this.config[key].value=value;
 						this.saveValue(key);
 					};
-					grid.valueChangeHandler=(key)=>{
+					gridInfoTarget.valueChangeHandler=(key)=>{
 						let {value} = this.config[key];
 						processbar.setTransition(this.config.rangeTransition.value);
 						processbar.initValue(value);
@@ -2084,7 +2116,7 @@
 						this.config[key].value=index;
 						this.saveValue(key);
 					};
-					grid.valueChangeHandler=(key)=>{
+					gridInfoTarget.valueChangeHandler=(key)=>{
 						let {value} = this.config[key];
 						if(selectBox.choiceIndex!=value)
 							selectBox.choiceIndex=value;
@@ -2124,7 +2156,7 @@
 					// checkboxBox.onValueChange=(value)=>{
 					// 	this.config[key].value=value;
 					// };
-					grid.valueChangeHandler=(key)=>{
+					gridInfoTarget.valueChangeHandler=(key)=>{
 						let {value,totalControl,controlValue} = this.config[key];
 						if(totalControl&&controlValue!=switchTag.switchValue){
 							switchTag.switch();
