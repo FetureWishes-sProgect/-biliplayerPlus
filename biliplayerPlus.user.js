@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili 播放器增强
 // @namespace    https://github.com/Grow-Willing/biliplayerPlus
-// @version      2022.11.19
+// @version      2022.12.27
 // @description  快捷键设置,回车快速发弹幕,双击全屏,自动选择最高清画质、播放、全屏、关闭弹幕、自动转跳和自动关灯等
 // @author       sugar
 // @license      MIT
@@ -362,7 +362,7 @@
 				name:"启用shadowroot",
 				type:"bool",
 				title:"若设置面板样式异常可以尝试开启此项，需重开设置面板",
-				value:false
+				value:false,
 			},
 			shortcutPreventDefault:{//取消快捷键默认行为
 				name:"取消快捷键默认行为",
@@ -380,44 +380,51 @@
 				name:"打开设置",
 				type:"keyboard",
 				value:"s",
-				code:"KeyS"
+				code:"KeyS",
+				dependency:["keyBindOne2One"],
 			},
 			switchSpeedChange:{//快捷键打开设置
 				name:"恢复默认速度/改变速度",
 				type:"keyboard",
 				title:"若更改过视频速度，则使用更改后的速度，否则使用设置中的默认速度",
 				value:"z",
-				code:"KeyZ"
+				code:"KeyZ",
+				dependency:["keyBindOne2One"],
 			},
 			speedDown:{//减速
 				name:"减速快捷键",
 				type:"keyboard",
 				value:"x",
-				code:"KeyX"
+				code:"KeyX",
+				dependency:["keyBindOne2One"],
 			},
 			speedUp:{//加速
 				name:"加速快捷键",
 				type:"keyboard",
 				value:"c",
-				code:"KeyC"
+				code:"KeyC",
+				dependency:["keyBindOne2One"],
 			},
 			switchWide:{//切换宽屏
 				name:"切换宽屏",
 				type:"keyboard",
 				value:",",
-				code:"Comma"
+				code:"Comma",
+				dependency:["keyBindOne2One"],
 			},
 			switchWebFullScreen:{//网页全屏
 				name:"网页全屏",
 				type:"keyboard",
 				value:".",
-				code:"Period"
+				code:"Period",
+				dependency:["keyBindOne2One"],
 			},
 			switchFullScreen:{//全屏
 				name:"全屏",
 				type:"keyboard",
 				value:"/",
-				code:"Slash"
+				code:"Slash",
+				dependency:["keyBindOne2One"],
 			},
 			defaultSpeed:{//默认速度
 				name:"默认播放速度",
@@ -426,6 +433,7 @@
 				end:10,
 				step:0.1,
 				value:1,
+				dependency:["rangeTransition"],
 			},
 			defaultChangeSpeed:{//变速幅度
 				name:"变速幅度",
@@ -434,6 +442,7 @@
 				end:1,
 				step:0.05,
 				value:0.1,
+				dependency:["rangeTransition"],
 			},
 			touchProcess:{
 				type:"hiddenSwitch",
@@ -483,7 +492,7 @@
 		 * @param {*} value 监听的元素
 		 * @param {String} key 监听的值
 		 */
-		watchValue(value,key){//监听指定key的值的变化
+		watchValue(value,key){//监听指定元素key的变化
 			//保存先前的值
 			value["_"+key]=value[key];
 			//绑定监听
@@ -751,7 +760,7 @@
 		 * @param {string} iconFamily 图标的fontFamily
 		 * @returns {HTMLDivElement} 图标组件
 		 */
-		createIcon(iconCode,iconFamily){//创建按钮
+		createIcon(iconCode,iconFamily){//创建图标
 			let iconTag=document.createElement("span");
 			iconTag.classList.add(iconFamily?iconFamily:"material-icons");
 			iconTag.innerHTML=iconCode;
@@ -1933,7 +1942,7 @@
 
 			for (let i = 0; i < Object.keys(this.config).length; i++) {
 				let key=Object.keys(this.config)[i];
-				let {type,title} = this.config[key];
+				let {type,title,dependency=[]} = this.config[key];
 
 				if (/hidden/.test(type)){
 					continue;
@@ -1985,8 +1994,6 @@
 					let discribe=document.createElement("span");
 					discribe.innerText=name;
 					grid.append(discribe);
-					//告诉依赖key，此key使用了这个依赖
-					this.mapperAddDependency("keyBindOne2One",key);
 
 					//按键
 					let keyboard=document.createElement("kbd");
@@ -2079,9 +2086,6 @@
 						this.saveValue(key);
 					};
 
-					//告诉依赖key，此key使用了这个依赖
-					this.mapperAddDependency("rangeTransition",key);
-
 					console.log(name,start,end,step,value);
 					let processbar=this.createProcessBar(start,end,step);
 					processbar.initValue(value);
@@ -2164,6 +2168,9 @@
 					}
 					grid.append(checkboxBox);
 				}
+				for(let i=0;i<dependency.length;i++){
+					this.mapperAddDependency(dependency[i],key);
+				}
 
 				//添加说明
 				if(title){
@@ -2226,6 +2233,9 @@
 				}
 			}
 		},
+		/**
+		 * 监听全局的键盘事件，以触发快捷键
+		 */
 		bindKeyBoardListener(){
 			document.body.addEventListener("keydown",(e)=>{
 				let valueText="",
