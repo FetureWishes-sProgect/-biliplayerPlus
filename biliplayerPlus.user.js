@@ -465,6 +465,27 @@
 				],
 			},
 		},
+		configIndexList:[
+			"defaultScreenSize",//默认屏幕尺寸
+			"autoQuality",//自动选择最高画质
+			"autoSpeed",//还原上次的播放速度
+			"rangeTransition",//启用滑动条过渡动画
+			"useShadowRoot",//启用滑动条过渡动画
+			"shortcutPreventDefault",//取消快捷键默认行为
+			"keyBindOne2One",//根据键位绑定快捷键
+			"openSettingShortcut",//打开设置
+			"switchSpeedChange",//恢复默认速度/改变速度
+			"speedDown",//减速快捷键
+			"speedUp",//加速快捷键
+			"switchWide",//切换宽屏
+			"switchWebFullScreen",//网页全屏
+			"switchFullScreen",//全屏
+			"defaultSpeed",//默认播放速度
+			"defaultChangeSpeed",//变速幅度
+			"touchProcess",//触屏控制进度
+			"touchVolume",//触屏控制音量
+			"touchHandler",//触屏处理
+		],
 		config:GM_listValues(),//保存的设置
 		maxInitTimes:6,//最大初始化次数
 		gridListSettingMapper:{},//网格列表
@@ -1957,8 +1978,10 @@
 				grid-template-columns:repeat(2,50%);
 			`;
 
-			for (let i = 0; i < Object.keys(this.config).length; i++) {
-				let key=Object.keys(this.config)[i];
+			for(let i=0; i < this.configIndexList.length; i++){
+			// for (let i = 0; i < Object.keys(this.config).length; i++) {
+				// let key=Object.keys(this.config)[i];
+				let key = this.configIndexList[i];
 				let {type,title,dependency=[]} = this.config[key];
 
 				if (/hidden/.test(type)){
