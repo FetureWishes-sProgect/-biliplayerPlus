@@ -1,6 +1,6 @@
-#TampermonkeyTool接口文档
+# TampermonkeyTool接口文档
 
-##数据字段
+## 数据字段
 
 | 字段名 | 接受数据类型 | 默认值 | 字段注释 |
 |  ----  | ----  | ---- | ---- |
@@ -13,16 +13,16 @@
 | touchList | object | { } | 触屏按下的手指列表 |
 | coreVersion | string | 随版本号而定 | 内核版本，即TampermonkeyTool的版本 |
 
-##方法字段
+## 方法字段
 
 | 字段名 | 参数 | 默认参数 | 功能 |
 |  ----  | ----  | ---- | ---- |
 | getElementMapper |  |  | 用于获取所有的元素映射表 |
 | getSettingRootElement |  |  | 获取跟元素节点（设置面板会挂载的节点），elementMapper中的settingRootElement字段 |
 | watchValue | value:监听的元素，key:监听的值 |  | 监听指定元素key的变化 |
-| scrollThrottle | value:监听的元素，key:监听的值 |  | 滚动节流函数 |
+| scrollThrottle | fn:需要节流的函数,wait:最短触发时间 |  | 滚动节流函数 |
 | createMapperTarget | key |  | 给gridListSettingMapper中的元素进行target创建 |
-| mapperAddDependency | value:监听的元素，key:监听的值 |  | 给gridListSettingMapper的元素添加依赖 |
+| mapperAddDependency | target:添加依赖的目标, dependency:添加的依赖 |  | 给gridListSettingMapper的元素添加依赖 |
 | settingPanelReload |  |  | 重新加载设置面板 |
 | switchSettingPanel |  |  | 切换设置面板的显隐状态 |
 | keyHandler | key |  | 执行对应按键的功能 |
@@ -43,7 +43,7 @@
 | init |  |  | 初始化 |
 | main |  |  | 主函数 |
 
-##元素组件构造函数
+## 元素组件构造函数
 
 | 字段名 | 参数 | 默认参数 | 功能 |
 |  ----  | ----  | ---- | ---- |
