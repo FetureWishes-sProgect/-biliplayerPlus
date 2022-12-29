@@ -1967,19 +1967,7 @@
 
 				let grid=document.createElement("div");
 				//信息载体
-				let gridInfoTarget;
-				if(this.gridListSettingMapper[key]){//判断先前是否有过
-					gridInfoTarget=this.gridListSettingMapper[key];
-					if(gridInfoTarget.dependency){
-
-					}else{
-						gridInfoTarget.dependency=[];
-					}
-				}else{
-					gridInfoTarget={};
-					this.gridListSettingMapper[key]=gridInfoTarget;
-					gridInfoTarget.dependency=[];
-				}
+				let gridInfoTarget=this.createMapperTarget(key);
 				grid.gridInfoTarget=gridInfoTarget;
 
 				grid.style="margin:10px 20px;";
