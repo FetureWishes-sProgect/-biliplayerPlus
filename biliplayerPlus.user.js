@@ -592,9 +592,10 @@
 		 * @property list[i].title 选项的说明
 		 * @property {array} list 当前所有选项的状态列表
 		 * @property {Function} onChange 监听状态切换事件
+		 * @property {Function} onitemInit 每个选项初始化触发
 		 * @returns {HTMLDivElement} 多选框组件
 		 */
-		createCheckBox(list){//创建多选框
+		createCheckBox(list,onitemInit){//创建多选框
 			let container=document.createElement("div");
 			let shadowRoot=container;
 			if (this.config.useShadowRoot.value) {
@@ -644,9 +645,6 @@
 				let checkBoxTag=document.createElement("span");
 				checkBoxTag.classList.add("checkBoxTag");
 
-				this.gridListSettingMapper[key]=checkBoxTag;
-				checkBoxTag.dependency=[];
-
 				if (title) {
 					checkBoxTag.title=title;
 				}
@@ -674,10 +672,9 @@
 					if(container.onChange)container.onChange(list);
 				});
 
-				checkBoxTag.valueChangeHandler=(key)=>{
-					let {value}=this.config[key];
-					if(value!=checkBoxTag.ischecked)
-						checkBoxTag.click();
+
+				if(onitemInit){
+					onitemInit(key,checkBoxTag);
 				}
 				checkBoxLine.appendChild(checkBoxTag);
 				shadowRoot.append(checkBoxLine);
@@ -1867,6 +1864,26 @@
 			customElements.define("tampermonkey-tool-tip", ToolTip);
 		},
 		/**
+		 * 给gridListSettingMapper中的元素进行target创建
+		 * @param {string} key 给谁创建target
+		 */
+		 createMapperTarget(key){
+			let target;
+			if(this.gridListSettingMapper[key]){//判断先前是否有过
+				target=this.gridListSettingMapper[key];
+				if(target.dependency){
+
+				}else{
+					target.dependency=[];
+				}
+			}else{
+				target={};
+				this.gridListSettingMapper[key]=target;
+				target.dependency=[];
+			};
+			return target;
+		},
+		/**
 		 * 给gridListSettingMapper的元素添加依赖
 		 * @param {string} target 给谁添加依赖
 		 * @param {string} dependency 添加的依赖名
@@ -2156,7 +2173,14 @@
 					let list=value.map((item,index)=>{
 						return this.config[item];
 					});
-					let checkboxBox=this.createCheckBox(list);
+					let checkboxBox=this.createCheckBox(list,(key,checkBoxTag)=>{
+						let target=this.createMapperTarget(key);
+						target.valueChangeHandler=(k)=>{
+							let {value}=this.config[k];
+							if(value!=checkBoxTag.ischecked)
+								checkBoxTag.click();
+						}
+					});
 					// checkboxBox.onValueChange=(value)=>{
 					// 	this.config[key].value=value;
 					// };

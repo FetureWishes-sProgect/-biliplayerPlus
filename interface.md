@@ -21,6 +21,7 @@
 | getSettingRootElement |  |  | 获取跟元素节点（设置面板会挂载的节点），elementMapper中的settingRootElement字段 |
 | watchValue | value:监听的元素，key:监听的值 |  | 监听指定元素key的变化 |
 | scrollThrottle | value:监听的元素，key:监听的值 |  | 滚动节流函数 |
+| createMapperTarget | key |  | 给gridListSettingMapper中的元素进行target创建 |
 | mapperAddDependency | value:监听的元素，key:监听的值 |  | 给gridListSettingMapper的元素添加依赖 |
 | settingPanelReload |  |  | 重新加载设置面板 |
 | switchSettingPanel |  |  | 切换设置面板的显隐状态 |
