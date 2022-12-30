@@ -1924,9 +1924,6 @@
 
 				grid.style=`
 					margin:10px 20px;
-					display: flex;
-					justify-content: center;
-					align-items: center;
 				`;
 				//根据类型创建设置项
 				if(type=="bool"){
@@ -2211,7 +2208,6 @@
 				width:100%;
 				overflow:auto;
 				grid-template-columns:repeat(2,50%);
-				grid-auto-flow: row dense;
 			`;
 			let dragDom,overDom;
 			// 添加拖拽开始的事件监听
