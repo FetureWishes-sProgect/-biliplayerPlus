@@ -465,27 +465,7 @@
 				],
 			},
 		},
-		configIndexList:[
-			"defaultScreenSize",//默认屏幕尺寸
-			"autoQuality",//自动选择最高画质
-			"autoSpeed",//还原上次的播放速度
-			"rangeTransition",//启用滑动条过渡动画
-			"useShadowRoot",//启用滑动条过渡动画
-			"shortcutPreventDefault",//取消快捷键默认行为
-			"keyBindOne2One",//根据键位绑定快捷键
-			"openSettingShortcut",//打开设置
-			"switchSpeedChange",//恢复默认速度/改变速度
-			"speedDown",//减速快捷键
-			"speedUp",//加速快捷键
-			"switchWide",//切换宽屏
-			"switchWebFullScreen",//网页全屏
-			"switchFullScreen",//全屏
-			"defaultSpeed",//默认播放速度
-			"defaultChangeSpeed",//变速幅度
-			"touchProcess",//触屏控制进度
-			"touchVolume",//触屏控制音量
-			"touchHandler",//触屏处理
-		],
+		configIndexList:[],
 		config:GM_listValues(),//保存的设置
 		maxInitTimes:6,//最大初始化次数
 		gridListSettingMapper:{},//网格列表
@@ -1923,64 +1903,9 @@
 			//最后统一添加依赖
 			this.gridListSettingMapper[target].dependency.push(dependency);
 		},
-		createSettingPanel() {//创建设置面板
-			//唯一化处理
-			if(this.settingPanel){
-				this.settingPanel.remove();
-			}
-			//创建确认窗口
-			let confirm=document.createElement("div");
-			confirm.style=`
-				position:fixed;
-				display:flex;
-				flex-direction:column;
-				min-width:660px;
-				min-height:380px;
-				inset:20%;
-				background:rgba(33,33,33,.9);
-				border:1px solid hsla(0,0%,100%,.12);
-				z-index:999;
-				box-shadow:rgb(0 0 0 / 25%) 0px 0px 10px 0px;
-				color:white;
-			`;
-			confirm.innerHTML=`<div style="position:relative;width:100%;text-align:center;font-size:16px;line-height:40px;">
-				${this.settingName}
-			</div>`;
-			let btnList=document.createElement('div');
-			btnList.style=`
-				position:absolute;
-				font-size:16px;
-				top:10px;
-				right:10px;
-			`;
-			//刷新按钮
-			let refreshBtn=this.createButton(this.createIcon("&#xe5d5;"),"重置设置");
-			refreshBtn.classList.add("material-icons");
-			refreshBtn.addEventListener("click",()=>{
-				this.resetSetting();
-			});
-			btnList.append(refreshBtn);
-			//关闭按钮
-			let exitBtn=this.createButton(this.createIcon("&#xe5cd;"),"关闭");
-			exitBtn.classList.add("material-icons");
-			exitBtn.addEventListener("click",()=>{
-				this.switchSettingPanel();
-			});
-			btnList.append(exitBtn);
-			confirm.append(btnList);
-
-
-			let gridBox=document.createElement("div");
-			gridBox.style=`
-				display:grid;
-				width:100%;
-				overflow:auto;
-				grid-template-columns:repeat(2,50%);
-			`;
-
+		// 遍历排序索引数组，进而对配置项进行排序
+		renderDom(gridBox) {
 			for(let i=0; i < this.configIndexList.length; i++){
-			// for (let i = 0; i < Object.keys(this.config).length; i++) {
-				// let key=Object.keys(this.config)[i];
 				let key = this.configIndexList[i];
 				let {type,title,dependency=[]} = this.config[key];
 
@@ -1989,11 +1914,20 @@
 				}
 
 				let grid=document.createElement("div");
+				// 添加拖拽属性
+                grid.draggable = true;
+				// grid.id = `config-${key}`;
+				grid.id = key;
 				//信息载体
 				let gridInfoTarget=this.createMapperTarget(key);
 				grid.gridInfoTarget=gridInfoTarget;
 
-				grid.style="margin:10px 20px;";
+				grid.style=`
+					margin:10px 20px;
+					display: flex;
+					justify-content: center;
+					align-items: center;
+				`;
 				//根据类型创建设置项
 				if(type=="bool"){
 					let {name,value} = this.config[key];
@@ -2223,6 +2157,108 @@
 				}
 
 			}
+		},
+		createSettingPanel() {//创建设置面板
+			//唯一化处理
+			if(this.settingPanel){
+				this.settingPanel.remove();
+			}
+			//创建确认窗口
+			let confirm=document.createElement("div");
+			confirm.style=`
+				position:fixed;
+				display:flex;
+				flex-direction:column;
+				min-width:660px;
+				min-height:380px;
+				inset:20%;
+				background:rgba(33,33,33,.9);
+				border:1px solid hsla(0,0%,100%,.12);
+				z-index:999;
+				box-shadow:rgb(0 0 0 / 25%) 0px 0px 10px 0px;
+				color:white;
+			`;
+			confirm.innerHTML=`<div style="position:relative;width:100%;text-align:center;font-size:16px;line-height:40px;">
+				${this.settingName}
+			</div>`;
+			let btnList=document.createElement('div');
+			btnList.style=`
+				position:absolute;
+				font-size:16px;
+				top:10px;
+				right:10px;
+			`;
+			//刷新按钮
+			let refreshBtn=this.createButton(this.createIcon("&#xe5d5;"),"重置设置");
+			refreshBtn.classList.add("material-icons");
+			refreshBtn.addEventListener("click",()=>{
+				this.resetSetting();
+			});
+			btnList.append(refreshBtn);
+			//关闭按钮
+			let exitBtn=this.createButton(this.createIcon("&#xe5cd;"),"关闭");
+			exitBtn.classList.add("material-icons");
+			exitBtn.addEventListener("click",()=>{
+				this.switchSettingPanel();
+			});
+			btnList.append(exitBtn);
+			confirm.append(btnList);
+
+			// 配置项网格布局dom
+			let gridBox=document.createElement("div");
+			gridBox.style=`
+				display:grid;
+				width:100%;
+				overflow:auto;
+				grid-template-columns:repeat(2,50%);
+				grid-auto-flow: row dense;
+			`;
+			let dragDom,overDom;
+			// 添加拖拽开始的事件监听
+            gridBox.addEventListener("dragstart", (e) => {
+                console.log("e",e)
+				dragDom = e.target;
+            });
+			// 添加被拖拽的对象在另一对象容器范围内拖拽的事件监听
+            gridBox.addEventListener("dragover", (e) => {
+				// 获取到移入的dom信息
+				overDom = e.target;
+                e.preventDefault();
+            });
+			// 添加释放鼠标键时触发的事件监听（需要提前取消默认事件，即在ondragover里使用e.preventDefault()，否则该方法不生效。）。
+            gridBox.addEventListener("drop", (e) => {
+                e.preventDefault();
+                if (!(e.target === gridBox)) {
+                    const curDom = document.getElementById(dragDom.id);
+					console.log("dragDom",dragDom);
+					console.log("overDom",overDom);
+					let oldConfigIndexList = this.configIndexList;
+					this.configIndexList = [];
+					for(let i=0; i<oldConfigIndexList.length; i++){
+						if(oldConfigIndexList[i] == overDom.id){
+							this.configIndexList.push(dragDom.id);
+							this.configIndexList.push(overDom.id);
+							console.log("over -- ",this.configIndexList)
+						}else if(oldConfigIndexList[i] == dragDom.id){
+							continue;
+						}else{
+							this.configIndexList.push(oldConfigIndexList[i]);
+						}
+					}
+					console.log("new configIndexList",this.configIndexList)
+					let child = gridBox.lastElementChild;
+					// 清空子元素
+					while (child) {
+						// console.log("child",child);
+						gridBox.removeChild(child);
+						child = gridBox.lastElementChild;
+					}
+					this.renderDom(gridBox);
+                }
+            });
+
+			// 遍历排序索引数组，进而对配置项进行排序
+			this.renderDom(gridBox);
 			confirm.append(gridBox);
 			this.getSettingRootElement().append(confirm);
 			this.settingPanel=confirm;
@@ -2700,6 +2736,12 @@
 					this.keyboardBindList[key]=element;
 				}
 			}
+			// 组件顺序映射
+			for (let i = 0; i < Object.keys(this.config).length; i++) {
+				let key = Object.keys(this.config)[i]
+				this.configIndexList.push(key);
+			}
+			console.log("this.configIndexList",this.configIndexList)
 			console.log("键盘映射初始化完成，开始监听键盘事件");
 			this.bindKeyBoardListener();
 			console.log("成功监听键盘事件，开始注册脚本设置项");
