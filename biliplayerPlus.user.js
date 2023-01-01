@@ -1916,8 +1916,9 @@
 				let grid=document.createElement("div");
 				// 添加拖拽属性
                 grid.draggable = true;
-				// grid.id = `config-${key}`;
-				grid.id = key;
+				grid.id = `config-${key}`;
+				grid.classList.add(`config-${key}`);
+				grid.super = null;
 				//信息载体
 				let gridInfoTarget=this.createMapperTarget(key);
 				grid.gridInfoTarget=gridInfoTarget;
@@ -1942,16 +1943,28 @@
 							switchTag.switch();
 						}
 					};
+					//添加上元素标志id
+					switchTag.id = `config${i}-switchTag-${key}`;
+					switchTag.classList.add(`config-${key}`);
+					switchTag.classList.add("domChild");
 					grid.append(switchTag);
 					//标题
 					let discribe=document.createElement("span");
 					discribe.innerText=name;
+					//添加上元素标志id
+					discribe.id = `config${i}-discribe-${key}`;
+					discribe.classList.add(`config-${key}`);
+					discribe.classList.add("domChild");
 					grid.append(discribe);
 				}else if(type=="keyboard"){
 					let {name,value,code} = this.config[key];
 					//标题
 					let discribe=document.createElement("span");
 					discribe.innerText=name;
+					//添加上元素标志id
+					discribe.id = `config${i}-discribe-${key}`;
+					discribe.classList.add(`config-${key}`);
+					discribe.classList.add("domChild");
 					grid.append(discribe);
 
 					//按键
@@ -2023,6 +2036,10 @@
 						let {value,code} = this.config[key];
 						keyboard.innerText=this.config.keyBindOne2One.value?code:value;
 					}
+					//添加上元素标志id
+					keyboard.id = `config${i}-keyboard-${key}`;
+					keyboard.classList.add(`config-${key}`);
+					keyboard.classList.add("domChild");
 					grid.append(keyboard);
 				}else if(type=="range"){//滑动条
 					let {name,start,end,step,value} = this.config[key];
@@ -2037,8 +2054,19 @@
 					discribe.style.verticalAlign="middle";
 					//数值
 					let valueText=this.createNumberBox(value,start,end,step);
+					//添加上元素标志id
+					discribe.id = `config${i}-discribe-${key}`;
+					discribe.classList.add(`config-${key}`);
+					discribe.classList.add("domChild");
+					valueText.id = `config${i}-valueText-${key}`;
+					valueText.classList.add(`config-${key}`);
+					valueText.classList.add("domChild");
 					valueBox.append(discribe);
 					valueBox.append(valueText);
+					//添加上元素标志id
+					valueBox.id = `config${i}-valueBox-${key}`;
+					valueBox.classList.add(`config-${key}`);
+					valueBox.classList.add("domChild");
 					grid.append(valueBox);
 					valueText.onChange=(value)=>{
 						this.config[key].value=value;
@@ -2060,6 +2088,10 @@
 						processbar.setTransition(this.config.rangeTransition.value);
 						processbar.initValue(value);
 					}
+					//添加上元素标志id
+					processbar.id = `config${i}-processbar-${key}`;
+					processbar.classList.add(`config-${key}`);
+					processbar.classList.add("domChild");
 					grid.append(processbar);
 				}else if(type=="select"){//下拉框
 					let {name,list,value} = this.config[key];
@@ -2071,7 +2103,15 @@
 					let discribe=document.createElement("span");
 					discribe.innerText=name;
 					discribe.style.marginRight="10px";
+					//添加上元素标志id
+					discribe.id = `config${i}-discribe-${key}`;
+					discribe.classList.add(`config-${key}`);
+					discribe.classList.add("domChild");
 					valueBox.append(discribe);
+					//添加上元素标志id
+					valueBox.id = `config${i}-valueBox-${key}`;
+					valueBox.classList.add(`config-${key}`);
+					valueBox.classList.add("domChild");
 					grid.append(valueBox);
 					let selectBox=this.createSelect(list,4,value);
 					selectBox.onValueChange=(value)=>{
@@ -2084,6 +2124,10 @@
 						if(selectBox.choiceIndex!=value)
 							selectBox.choiceIndex=value;
 					}
+					//添加上元素标志id
+					selectBox.id = `config${i}-selectBox-${key}`;
+					selectBox.classList.add(`config-${key}`);
+					selectBox.classList.add("domChild");
 					grid.append(selectBox);
 				}else if(type=="checkbox"){//多选框
 					let {name,value,totalControl,controlValue} = this.config[key];
@@ -2095,6 +2139,10 @@
 					let discribe=document.createElement("span");
 					discribe.innerText=name;
 					discribe.style.marginRight="10px";
+					//添加上元素标志id
+					discribe.id = `config${i}-discribe-${key}`;
+					discribe.classList.add(`config-${key}`);
+					discribe.classList.add("domChild");
 					valueBox.append(discribe);
 
 					//开关
@@ -2108,9 +2156,18 @@
 					};
 
 					if (totalControl) {
+						//添加上元素标志id
+						switchTag.super = key
+						switchTag.id = `config${i}-switchTag-${key}`;
+						switchTag.classList.add(`config-${key}`);
+						switchTag.classList.add("domChild");
 						valueBox.append(switchTag);
 					}
 
+					//添加上元素标志id
+					valueBox.id = `config${i}-valueBox-${key}`;
+					valueBox.classList.add(`config-${key}`);
+					valueBox.classList.add("domChild");
 					grid.append(valueBox);
 					let list=value.map((item,index)=>{
 						return this.config[item];
@@ -2132,6 +2189,10 @@
 							switchTag.switch();
 						}
 					}
+					//添加上元素标志id
+					checkboxBox.id = `config${i}-checkboxBox-${key}`;
+					checkboxBox.classList.add(`config-${key}`);
+					checkboxBox.classList.add("domChild");
 					grid.append(checkboxBox);
 				}
 				for(let i=0;i<dependency.length;i++){
@@ -2212,30 +2273,45 @@
 			let dragDom,overDom;
 			// 添加拖拽开始的事件监听
             gridBox.addEventListener("dragstart", (e) => {
-                console.log("e",e)
 				dragDom = e.target;
             });
 			// 添加被拖拽的对象在另一对象容器范围内拖拽的事件监听
             gridBox.addEventListener("dragover", (e) => {
 				// 获取到移入的dom信息
-				overDom = e.target;
+                let curDom = document.getElementById(e.target.id);
+				// console.log("curDom",curDom)
+				if(curDom.classList && curDom.classList.contains("domChild")){
+					let targetId = "";
+					let classList = curDom.classList;
+					for(let i=0; i<classList.length; i++){
+						if(classList[i].indexOf("config")>-1){
+							targetId = classList[i];
+							break;
+						}
+					}
+					let targetDom = document.getElementById(targetId);
+					overDom = targetDom;
+				}else{
+					overDom = e.target;
+				}
                 e.preventDefault();
             });
 			// 添加释放鼠标键时触发的事件监听（需要提前取消默认事件，即在ondragover里使用e.preventDefault()，否则该方法不生效。）。
             gridBox.addEventListener("drop", (e) => {
                 e.preventDefault();
                 if (!(e.target === gridBox)) {
-                    const curDom = document.getElementById(dragDom.id);
 					console.log("dragDom",dragDom);
 					console.log("overDom",overDom);
+					let dragId = dragDom.id.split("-")[1];
+					let overId = overDom.id.split("-")[1];
 					let oldConfigIndexList = this.configIndexList;
 					this.configIndexList = [];
 					for(let i=0; i<oldConfigIndexList.length; i++){
-						if(oldConfigIndexList[i] == overDom.id){
-							this.configIndexList.push(dragDom.id);
-							this.configIndexList.push(overDom.id);
+						if(oldConfigIndexList[i] == overId){
+							this.configIndexList.push(dragId);
+							this.configIndexList.push(overId);
 							console.log("over -- ",this.configIndexList)
-						}else if(oldConfigIndexList[i] == dragDom.id){
+						}else if(oldConfigIndexList[i] == dragId){
 							continue;
 						}else{
 							this.configIndexList.push(oldConfigIndexList[i]);
