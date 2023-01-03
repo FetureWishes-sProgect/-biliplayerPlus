@@ -1905,6 +1905,8 @@
 		},
 		// 遍历排序索引数组，进而对配置项进行排序
 		renderDom(gridBox) {
+			
+			let dragDom,overDom;
 			for(let i=0; i < this.configIndexList.length; i++){
 				let key = this.configIndexList[i];
 				let {type,title,dependency=[]} = this.config[key];
@@ -2198,6 +2200,69 @@
 				for(let i=0;i<dependency.length;i++){
 					this.mapperAddDependency(dependency[i],key);
 				}
+				
+				// 添加拖拽开始的事件监听
+				grid.addEventListener("dragstart", (e) => {
+					// console.log("dragstart.grid",grid)
+					// dragDom = e.target;
+					dragDom = grid;
+				});
+				// 添加被拖拽的对象在另一对象容器范围内拖拽的事件监听
+				grid.addEventListener("dragover", (e) => {
+					// console.log("dragover",e.target)
+					// 获取到移入的dom信息
+					// let curDom = document.getElementById(e.target.id);
+					// console.log("curDom",curDom)
+					// if(curDom.classList && curDom.classList.contains("domChild")){
+					// 	let targetId = "";
+					// 	let classList = curDom.classList;
+					// 	for(let i=0; i<classList.length; i++){
+					// 		if(classList[i].indexOf("config")>-1){
+					// 			targetId = classList[i];
+					// 			break;
+					// 		}
+					// 	}
+					// 	let targetDom = document.getElementById(targetId);
+					// 	overDom = targetDom;
+					// }else{
+					// 	overDom = e.target;
+					// }
+					overDom = grid;
+					e.preventDefault();
+				});
+				// 添加释放鼠标键时触发的事件监听（需要提前取消默认事件，即在ondragover里使用e.preventDefault()，否则该方法不生效。）。
+				grid.addEventListener("drop", (e) => {
+					// console.log("drop.grid",grid)
+					e.preventDefault();
+					let dragId = dragDom.id.split("-")[1];
+					let overId = overDom.id.split("-")[1];
+					// console.log("dragDom",dragDom);
+					// console.log("overDom",overDom);
+					if(dragId != overId){
+						let oldConfigIndexList = this.configIndexList;
+						this.configIndexList = [];
+						for(let i=0; i<oldConfigIndexList.length; i++){
+							if(oldConfigIndexList[i] == overId){
+								this.configIndexList.push(dragId);
+								this.configIndexList.push(overId);
+								// console.log("over -- ",this.configIndexList)
+							}else if(oldConfigIndexList[i] == dragId){
+								continue;
+							}else{
+								this.configIndexList.push(oldConfigIndexList[i]);
+							}
+						}
+						// console.log("new configIndexList",this.configIndexList)
+						let child = gridBox.lastElementChild;
+						// 清空子元素
+						while (child) {
+							// console.log("child",child);
+							gridBox.removeChild(child);
+							child = gridBox.lastElementChild;
+						}
+						this.renderDom(gridBox);
+					}
+				});
 
 				//添加说明
 				if(title){
@@ -2270,64 +2335,6 @@
 				overflow:auto;
 				grid-template-columns:repeat(2,50%);
 			`;
-			let dragDom,overDom;
-			// 添加拖拽开始的事件监听
-            gridBox.addEventListener("dragstart", (e) => {
-				dragDom = e.target;
-            });
-			// 添加被拖拽的对象在另一对象容器范围内拖拽的事件监听
-            gridBox.addEventListener("dragover", (e) => {
-				// 获取到移入的dom信息
-                let curDom = document.getElementById(e.target.id);
-				// console.log("curDom",curDom)
-				if(curDom.classList && curDom.classList.contains("domChild")){
-					let targetId = "";
-					let classList = curDom.classList;
-					for(let i=0; i<classList.length; i++){
-						if(classList[i].indexOf("config")>-1){
-							targetId = classList[i];
-							break;
-						}
-					}
-					let targetDom = document.getElementById(targetId);
-					overDom = targetDom;
-				}else{
-					overDom = e.target;
-				}
-                e.preventDefault();
-            });
-			// 添加释放鼠标键时触发的事件监听（需要提前取消默认事件，即在ondragover里使用e.preventDefault()，否则该方法不生效。）。
-            gridBox.addEventListener("drop", (e) => {
-                e.preventDefault();
-                if (!(e.target === gridBox)) {
-					console.log("dragDom",dragDom);
-					console.log("overDom",overDom);
-					let dragId = dragDom.id.split("-")[1];
-					let overId = overDom.id.split("-")[1];
-					let oldConfigIndexList = this.configIndexList;
-					this.configIndexList = [];
-					for(let i=0; i<oldConfigIndexList.length; i++){
-						if(oldConfigIndexList[i] == overId){
-							this.configIndexList.push(dragId);
-							this.configIndexList.push(overId);
-							console.log("over -- ",this.configIndexList)
-						}else if(oldConfigIndexList[i] == dragId){
-							continue;
-						}else{
-							this.configIndexList.push(oldConfigIndexList[i]);
-						}
-					}
-					console.log("new configIndexList",this.configIndexList)
-					let child = gridBox.lastElementChild;
-					// 清空子元素
-					while (child) {
-						// console.log("child",child);
-						gridBox.removeChild(child);
-						child = gridBox.lastElementChild;
-					}
-					this.renderDom(gridBox);
-                }
-            });
 
 			// 遍历排序索引数组，进而对配置项进行排序
 			this.renderDom(gridBox);
